@@ -1,13 +1,19 @@
 module Day09 where
 import Data.Maybe (isJust, isNothing, fromMaybe)
 import Debug.Trace (traceShowId, traceShow)
+import Data.Sequence ( (<|), dropWhileR, fromList, Seq(..) )
+import Data.Foldable (Foldable(toList))
 
-compact :: [Maybe Int] -> [Int]
-compact [] = []
-compact (Just x:xs) = x : compact xs
-compact (Nothing:xs) = case dropWhile isNothing (reverse xs) of
-    [] -> []
-    (Just x:xs') -> x : compact (reverse xs')
+
+compact :: Seq (Maybe Int) -> Seq Int
+compact Empty = Empty
+compact (Just x :<| xs) = x <| compact xs
+compact (Nothing :<| xs) = case dropWhileR isNothing xs of
+    Empty -> Empty
+    (xs' :|> Just x) -> x <| compact xs'
+
+compactList :: [Maybe Int] -> [Int]
+compactList = toList . compact . fromList
 
 parse :: Int -> [Char] -> [Maybe Int]
 parse idx [] = []
@@ -44,5 +50,5 @@ flatten ((Just id, len):xs) = replicate len id ++ flatten xs
 
 main = do
     input <- getContents
-    putStr "part 1: " >> print (checksum $ compact $ parse 0 input)
+    putStr "part 1: " >> print (checksum $ compactList $ parse 0 input)
     putStr "part 2: " >> print (checksum $ flatten $ defrag $ parseBlocks 0 input)
