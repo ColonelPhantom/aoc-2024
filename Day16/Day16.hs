@@ -1,7 +1,6 @@
 import qualified Data.Map as M
 import qualified Data.Set as S
 import qualified Data.Bifunctor
-import Debug.Trace (traceShow)
 
 data Tile = Empty | Wall | Start | End deriving (Show, Eq)
 

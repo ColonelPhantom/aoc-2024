@@ -4,7 +4,6 @@ import qualified Data.Sequence as Seq
 import Data.Maybe (fromMaybe)
 import Data.Foldable (toList)
 import Data.List (intersperse, intercalate)
-import Debug.Trace (traceShow)
 
 -- Input handling
 data State = State {

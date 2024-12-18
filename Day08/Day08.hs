@@ -4,7 +4,6 @@ import Data.Char (isAlpha, isDigit)
 import qualified Data.Map as M
 import qualified Data.Set as S
 import qualified Data.Bifunctor
-import Debug.Trace (traceShowId)
 
 type Coord = (Int, Int)
 

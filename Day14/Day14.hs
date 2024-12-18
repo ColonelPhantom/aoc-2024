@@ -1,5 +1,4 @@
 import Data.List.Split (splitOn)
-import Debug.Trace (traceShow)
 import Data.Maybe (mapMaybe)
 import qualified Data.Set as S
 import Data.List (sort)
@@ -41,16 +40,16 @@ part1 (w,h) steps robots = total where
 
 findNoOverlap :: [Robot] -> Int
 findNoOverlap rs = go 0 where
-    go n = let rs' = map (calculateSteps' (101,103) n) rs in traceShow n $ if S.toAscList (S.fromList rs') == sort rs' then n else go (n+1)
+    go n = let rs' = map (calculateSteps' (101,103) n) rs in if S.toAscList (S.fromList rs') == sort rs' then n else go (n+1)
 
 main :: IO ()
 main = do
     input <- lines <$> getContents
     let robots = map readRobot input
 
-    putStr "Part 1 example: " >> print (part1 (11,7) 100 robots)
-    putStr "Part 1: " >> print (part1 (101,103) 100 robots)
+    putStr "part 1 example: " >> print (part1 (11,7) 100 robots)
+    putStr "part 1: " >> print (part1 (101,103) 100 robots)
 
-    print $ findNoOverlap robots
+    putStr "part 2: "; print $ findNoOverlap robots
     -- let robotPosExample = map (calculateSteps (11,7) 100) robots
     -- mapM_ (print . calculateSteps (11,7) 100) robots

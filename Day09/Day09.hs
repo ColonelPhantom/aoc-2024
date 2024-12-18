@@ -1,7 +1,9 @@
 import Data.Maybe (isJust, isNothing, fromMaybe)
-import Debug.Trace (traceShowId, traceShow)
+-- import Debug.Trace (traceShowId, traceShow)
 import Data.Sequence ( (<|), dropWhileR, fromList, Seq(..) )
 import Data.Foldable (Foldable(toList))
+
+traceShow _ x = x
 
 compact :: Seq (Maybe Int) -> Seq Int
 compact Empty = Empty

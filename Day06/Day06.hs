@@ -2,7 +2,6 @@ import Data.Maybe (catMaybes)
 import qualified Data.Set as S
 import Prelude hiding (Left, Right)
 import Data.List (unfoldr)
-import Debug.Trace (traceShow)
 
 data Dir = Up | Down | Left | Right deriving (Eq, Ord, Show)
 

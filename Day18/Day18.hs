@@ -4,7 +4,6 @@ import qualified Data.Map as M
 import qualified Data.Bifunctor
 import Data.Maybe (fromMaybe, fromJust, isJust, isNothing)
 import Data.List (inits)
-import Debug.Trace (traceShowId, traceShow)
 
 type Coord = (Int, Int)
 
@@ -37,7 +36,7 @@ part1 size fallen unsafe = fromJust $ findPath size (take fallen unsafe)
 
 part2 :: Int -> [Coord] -> Coord
 part2 size unsafe = unsafe !! (binarySearchD 0 (length unsafe) safeN - 1) where
-    safeN n = traceShow n $ isNothing $ findPath size (take n unsafe)
+    safeN n = isNothing $ findPath size (take n unsafe)
 
 binarySearchD :: Int -> Int -> (Int -> Bool) -> Int
 binarySearchD lo hi p
