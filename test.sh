@@ -6,8 +6,8 @@ run_day_ghci () {
 
 run_day_ghc () {
     cd Day$1
-    ghc -O2 -o Day$1.exe Day$1.hs > /dev/null
-    /usr/bin/time -f "Day$1: %e seconds" ./Day$1.exe < day$1.input > /dev/null
+    ghc -O2 -o Day$1.exe Day$1.hs -prof -fprof-auto > /dev/null
+    /usr/bin/time -f "Day$1: %e seconds" ./Day$1.exe +RTS -p < day$1.input > /dev/null
     cd ..
 }
 
