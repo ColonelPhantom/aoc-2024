@@ -2,3 +2,7 @@
 *.input
 *.min
 *.min2
+
+*.hi
+*.prof
+*.o
