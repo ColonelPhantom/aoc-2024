@@ -57,7 +57,7 @@ main = do
     let posmap = S.fromList positions
     putStr "part 1: " >> print (S.size posmap)
 
-    let newmaps = S.toList $ S.fromList $ [S.insert (x,y) obst | (x,y) <- positions, (x,y) /= (sx,sy)]
+    let newmaps = S.toList $ S.fromList $ [S.insert (x,y) obst | (x,y) <- S.toList posmap, (x,y) /= (sx,sy)]
     let loopmaps = filter (\o -> loops S.empty (step o dims) (Up,sx,sy)) newmaps
 --     mapM_ print loopmaps
     putStr "part 2: " >> print (S.size (S.fromList loopmaps))
