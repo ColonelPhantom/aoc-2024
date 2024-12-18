@@ -4,7 +4,6 @@ import Debug.Trace (traceShowId, traceShow)
 import Data.Sequence ( (<|), dropWhileR, fromList, Seq(..) )
 import Data.Foldable (Foldable(toList))
 
-
 compact :: Seq (Maybe Int) -> Seq Int
 compact Empty = Empty
 compact (Just x :<| xs) = x <| compact xs
@@ -28,7 +27,7 @@ parseBlocks idx (x:y:xs) = (Just idx, read [x]) : (Nothing, read [y]) : parseBlo
 defrag :: [(Maybe Int, Int)] -> [(Maybe Int, Int)]
 defrag blocks = foldr process1 blocks candidates where
     process1 cmd block = let result = mergeAll $ defrag1 cmd block in traceShow (cmd, length result) result
-    candidates = map (\(Just id, len) -> (id,len)) $ (filter (\(x,y) -> isJust x) blocks)
+    candidates = map (\(Just id, len) -> (id,len)) $ filter (\(x,y) -> isJust x) blocks
     defrag1 (id, len) ((Nothing, free):xs) = case compare free len of
         LT -> (Nothing, free) : defrag1 (id, len) xs
         EQ -> (Just id, len) : delete1 (id, len) xs

@@ -32,6 +32,5 @@ eval2 True (Mul a b : xs) = a*b + eval2 True xs
 main :: IO ()
 main = do
     input <- getMuls <$> getContents
-    print input
     putStr "Part 1: " >> print (eval1 input)
     putStr "Part 2: " >> print (eval2 True input)

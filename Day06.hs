@@ -56,7 +56,6 @@ main = do
     let step'' pos = (\(dir,x,y) -> ((x,y), (dir,x,y))) <$> step obst dims pos
     let positions = unfoldr step'' (Up,sx,sy)
     let posmap = S.fromList positions
-    print positions
     putStr "part 1: " >> print (S.size posmap)
 
     let newmaps = S.toList $ S.fromList $ [S.insert (x,y) obst | (x,y) <- positions, (x,y) /= (sx,sy)]
