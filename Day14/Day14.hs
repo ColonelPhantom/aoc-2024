@@ -38,9 +38,14 @@ part1 (w,h) steps robots = total where
     counts = map (\q -> length (filter (==q) quadrants)) [NW, NE, SE, SW]
     total = product counts
 
+hasDups :: Ord a => [a] -> Bool
+hasDups xs = go S.empty xs where
+    go s [] = False
+    go s (x:xs) = if S.member x s then True else go (S.insert x s) xs
+
 findNoOverlap :: [Robot] -> Int
 findNoOverlap rs = go 0 where
-    go n = let rs' = map (calculateSteps' (101,103) n) rs in if S.toAscList (S.fromList rs') == sort rs' then n else go (n+1)
+    go n = let rs' = map (calculateSteps' (101,103) n) rs in if hasDups rs' then go (n+1) else n
 
 main :: IO ()
 main = do
