@@ -1,4 +1,3 @@
-module Day09 where
 import Data.Maybe (isJust, isNothing, fromMaybe)
 import Debug.Trace (traceShowId, traceShow)
 import Data.Sequence ( (<|), dropWhileR, fromList, Seq(..) )

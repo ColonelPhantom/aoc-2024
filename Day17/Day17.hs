@@ -1,5 +1,3 @@
-module Day17 (main) where
-
 import Data.Bits (xor)
 import Data.List.Split (splitOn)
 import qualified Data.Sequence as Seq

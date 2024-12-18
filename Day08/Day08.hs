@@ -1,6 +1,3 @@
-module Day08 where
-
-
 import Data.List.Split
 import Data.Maybe (catMaybes)
 import Data.Char (isAlpha, isDigit)

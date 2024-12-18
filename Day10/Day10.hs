@@ -1,5 +1,3 @@
-module Day10 where
-
 import qualified Data.Map as M
 import qualified Data.Set as S
 type Coord = (Int, Int)
