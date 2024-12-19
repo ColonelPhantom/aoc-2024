@@ -15,14 +15,19 @@ parse xs = M.fromList elems where
 applyUntil :: Eq a => (a -> a) -> a -> a
 applyUntil f x = let y = f x in if x == y then x else applyUntil f y
 
-step :: M.Map Coord Char -> M.Map Coord (S.Set Coord) -> M.Map Coord (S.Set Coord)
-step m s = M.mapWithKey go s where
-    go c current = let self = m M.! c in
-                S.unions $ current : map (s M.!) (filter (\n -> m M.! n == self) $ neighs c)
-    neighs (x,y) = filter (`M.member` m) [(x-1,y), (x+1,y), (x,y-1), (x,y+1)]
+findSet :: M.Map Coord Char -> Coord -> S.Set Coord
+findSet m c = go [c] S.empty where
+    color = m M.! c
+    go [] s = s
+    go (q:qs) s = go (filter (`S.notMember` s) (neighs q) ++ qs) (S.insert q s)
+    neighs (x,y) = filter (\x -> M.member x m && m M.! x == color) [(x-1,y), (x+1,y), (x,y-1), (x,y+1)]
 
 findGroups :: M.Map Coord Char -> S.Set (S.Set Coord)
-findGroups m = S.fromList $ M.elems $ applyUntil (step m) $ M.fromList $ map (\c -> (c, S.singleton c)) $ M.keys m
+findGroups m = S.fromList $ go (M.keys m) [] S.empty where
+    go [] ss total = ss
+    go (q:qs) ss total = if S.member q total
+        then go qs ss total
+        else let self = findSet m q in go qs (self : ss) (S.union self total)
 
 perimeter :: S.Set Coord -> Int
 perimeter s = sum $ map untouching $ S.toList s where
