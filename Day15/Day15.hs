@@ -75,27 +75,14 @@ findRobot2 :: M.Map Coord Tile2 -> Coord
 findRobot2 = fst . head . filter ((== Robot2) . snd) . M.toList
 
 move2 :: Move -> Coord -> M.Map Coord Tile2 -> Maybe (M.Map Coord Tile2)
-move2 dir c@(x,y) m = let next@(x', y') = step dir c in case m M.! next of
-    Wall2 -> Nothing
-    Empty2 -> Just $ M.insert next (m M.! c) $ M.insert c Empty2 m
-    -- BoxL -> M.insert next (m M.! c) . M.insert c Empty2 <$> move2 dir next m
-    -- BoxR -> M.insert next (m M.! c) . M.insert c Empty2 <$> move2 dir next m
-    BoxL -> case dir of
-        L -> M.insert next (m M.! c) . M.insert c Empty2 <$> move2 dir next m
-        R -> M.insert next (m M.! c) . M.insert c Empty2 <$> move2 dir next m
-        _ -> M.insert next (m M.! c) . M.insert c Empty2 <$> moveMultiple dir next (x'+1,y') m
-    BoxR -> case dir of
-        L -> M.insert next (m M.! c) . M.insert c Empty2 <$> move2 dir next m
-        R -> M.insert next (m M.! c) . M.insert c Empty2 <$> move2 dir next m
-        _ -> M.insert next (m M.! c) . M.insert c Empty2 <$> moveMultiple dir next (x'-1,y') m
-    where
-        moveMultiple dir c1 c2 m = move2 dir c1 m >>= move2 dir c2
-        -- moveOther dir c@(x,y) m = let next = step dir c in case m M.! next of
-        --     Wall2 -> Nothing
-        --     Empty2 -> Just $ M.insert next (m M.! c) $ M.insert c Empty2 m
-        --     BoxL -> M.insert next (m M.! c) . M.insert c Empty2 <$> move2 dir next m
-        --     BoxR -> M.insert next (m M.! c) . M.insert c Empty2 <$> move2 dir next m
-
+move2 dir c@(x,y) m =
+    let next@(x', y') = step dir c                 -- find goal coord
+    in M.insert next (m M.! c) . M.insert c Empty2 -- and move to it
+    <$> case m M.! next of                         -- but only if we can free it
+        Wall2 -> Nothing
+        Empty2 -> Just m
+        BoxL -> move2 dir next m >>= if dir == L || dir == R then move2 dir (x'+1,y') else pure
+        BoxR -> move2 dir next m >>= if dir == L || dir == R then move2 dir (x'-1,y') else pure
 
 moveRobot2 :: Move -> (Coord, M.Map Coord Tile2) -> (Coord, M.Map Coord Tile2)
 moveRobot2 dir (c,m) = maybe (c,m) (step dir c,) (move2 dir c m)
