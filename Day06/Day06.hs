@@ -18,16 +18,19 @@ starting xs = elems where
     linep y = zipWith (`entry` y) [0..]
     entry x y char = if char == '^' then Just (x,y) else Nothing
 
+{-# INLINE right #-}
 right Up = Right
 right Down = Left
 right Right = Down
 right Left = Up
 
+{-# INLINE move #-}
 move (Up, x, y) = (x,y-1)
 move (Down,x,y) = (x,y+1)
 move (Left,x,y) = (x-1,y)
 move (Right,x,y)= (x+1,y)
 
+{-# INLINE outOfBounds #-}
 outOfBounds (m,n) (x,y) = x < 0 || x >= m || y < 0 || y >= n
 
 step :: S.Set (Int, Int) -> (Int, Int) -> (Dir, Int, Int) -> Maybe ((Dir, Int, Int), Bool)
