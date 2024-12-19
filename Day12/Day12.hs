@@ -12,9 +12,6 @@ parse xs = M.fromList elems where
     linep y = zipWith (`entry` y) [0..]
     entry x y char = ((x,y), char)
 
-applyUntil :: Eq a => (a -> a) -> a -> a
-applyUntil f x = let y = f x in if x == y then x else applyUntil f y
-
 findSet :: M.Map Coord Char -> Coord -> S.Set Coord
 findSet m c = go [c] S.empty where
     color = m M.! c
@@ -31,7 +28,6 @@ findGroups m = S.fromList $ go (M.keys m) [] S.empty where
 
 perimeter :: S.Set Coord -> Int
 perimeter s = sum $ map untouching $ S.toList s where
-    untouching :: Coord -> Int
     untouching (x,y) = length $ filter (`S.notMember` s) [(x-1,y), (x+1,y), (x,y-1), (x,y+1)]
 
 cost1 :: S.Set Coord -> Int
@@ -59,10 +55,10 @@ sides (((x,y), d):fs) = case d of
 cost2 :: S.Set Coord -> Int
 cost2 s = sides (fences s) * S.size s
 
+main :: IO ()
 main = do
     input <- parse . lines <$> getContents
     let groups = findGroups input
 
     putStr "part 1: " >> print (sum $ map cost1 $ S.toList groups)
     putStr "part 2: " >> print (sum $ map cost2 $ S.toList groups)
-    -- putStr "part 2: " >> print (map (\g -> sides g (S.toList g)) $ S.toList groups)
