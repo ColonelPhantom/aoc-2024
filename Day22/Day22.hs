@@ -1,6 +1,9 @@
 import Data.Bits (xor)
 import qualified Data.Map as M
 import Data.Tuple (swap)
+import Control.Parallel (par)
+import Control.Parallel.Strategies
+import Control.Parallel.Strategies (rdeepseq)
 
 secrets :: Int -> Int
 secrets = step (*2048) . step (`div` 32) . step (*64) where
@@ -25,13 +28,24 @@ combos secret = zip (slices 4 (changes ps)) (drop 4 ps) where
 comboMap :: Int -> M.Map [Int] Int
 comboMap = M.fromListWith (\a b -> b) . combos
 
+unionsMergeWith :: (Ord k, NFData k, NFData a) => (a -> a -> a) -> [M.Map k a] -> M.Map k a
+unionsMergeWith f ms = case unionStep f ms `using` parList rdeepseq of 
+    [] -> M.empty
+    [m] -> m
+    ms' -> unionsMergeWith f ms'
+    where
+    unionStep f [] = []
+    unionStep f [m] = [m]
+    unionStep f (m:n:ms) = M.unionWith f m n : unionStep f ms
+
+
 main = do
     input <- map read . lines <$> getContents
-    putStr "part 1: "; print $ sum $ map part1 input
+    _ <- input `usingIO` rdeepseq
+    putStr "part 1: "; print $ sum (map part1 input `using` parList rseq)
 
-    let maps = map comboMap input
-    mapM_ (\(i,m) -> print (i , M.size m)) (zip [0..] maps)
-    let map1 = M.unionsWith (+) maps
+    let maps = map comboMap input `using` parList rseq
+    let map1 = unionsMergeWith (+) maps
     let biggest = maximum $ map swap $ M.toList map1
     
     putStr "part 2: "; print biggest
