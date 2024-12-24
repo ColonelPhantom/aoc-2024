@@ -4,6 +4,7 @@ import Data.Maybe (catMaybes)
 import qualified Data.Set as S
 import qualified Data.Array as A
 import qualified Data.Map.Merge.Lazy as MM
+import Control.Parallel.Strategies
 
 type Coord = (Int, Int)
 data Tile = Empty | Wall | Start | End deriving (Show, Eq)
@@ -56,7 +57,7 @@ getCheats m = do
 --                     $ map (cheatable m (n-1)) [(x,y), (x-1, y), (x+1, y), (x, y-1), (x, y+1)]
 
 cheatable :: M.Map Coord Tile -> Int -> [(Coord, M.Map Coord Int)]
-cheatable m len = A.assocs final where
+cheatable m len = A.assocs final `using` parListChunk 16 rdeepseq where
     (minx, miny) = minimum $ M.keys m
     (maxx, maxy) = maximum $ M.keys m
 
@@ -72,7 +73,7 @@ cheatable m len = A.assocs final where
             go1 (x', y') = memo `safeLookup` (n-1, x', y')
             safeLookup a (n', x,y) = if x < minx || x > maxx || y < miny || y > maxy then M.empty else a A.! (n', x,y)
             merge :: M.Map Coord Int -> M.Map Coord Int -> M.Map Coord Int
-            merge = MM.merge MM.preserveMissing (MM.mapMissing $ const (+1)) (MM.zipWithMatched $ \_ l r -> min l (r+1))
+            merge = MM.merge MM.preserveMissing (MM.mapMissing $ const (+1)) (MM.zipWithMatched $ const $ \l r -> min l (r+1))
 
 getCheatsN :: Int -> M.Map Coord Tile -> [(Int, Coord, Coord)]
 getCheatsN len m = do
