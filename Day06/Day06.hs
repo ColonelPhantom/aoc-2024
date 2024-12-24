@@ -3,6 +3,7 @@ import qualified Data.Set as S
 import Prelude hiding (Left, Right)
 import Data.List (unfoldr)
 import qualified Data.Bifunctor as Bf
+import Control.Parallel.Strategies
 
 data Dir = Up | Down | Left | Right deriving (Eq, Ord, Show)
 
@@ -55,5 +56,6 @@ main = do
     putStr "part 1: " >> print (S.size posmap)
 
     let newmaps = S.toList $ S.fromList $ [S.insert (x,y) obst | (x,y) <- S.toList posmap, (x,y) /= (sx,sy)]
-    let loopmaps = filter (\o -> loops S.empty (step o dims) (Up,sx,sy)) newmaps
+    let bools = map (\o -> loops S.empty (step o dims) (Up,sx,sy)) newmaps `using` parList rseq
+    let loopmaps = map fst $ filter snd $ zip newmaps bools
     putStr "part 2: " >> print (S.size (S.fromList loopmaps))
