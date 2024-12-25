@@ -6,5 +6,6 @@
 
 *.hi
 *.prof
+*.eventlog
 *.o
 *.exe
