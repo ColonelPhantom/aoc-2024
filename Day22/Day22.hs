@@ -3,7 +3,6 @@ import qualified Data.Map as M
 import Data.Tuple (swap)
 import Control.Parallel (par)
 import Control.Parallel.Strategies
-import Control.Parallel.Strategies (rdeepseq)
 
 secrets :: Int -> Int
 secrets = step (*2048) . step (`div` 32) . step (*64) where
