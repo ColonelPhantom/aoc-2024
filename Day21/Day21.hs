@@ -1,5 +1,3 @@
-module Day21.Day21 (main) where
-
 import Prelude hiding (Left, Right)
 import qualified Data.Map as M
 import qualified Data.Sequence as Seq

@@ -11,6 +11,6 @@ run_day_ghc () {
     cd ..
 }
 
-for i in {01..24}; do
+for i in {01..25}; do
     run_day_ghc $i;
 done
