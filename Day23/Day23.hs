@@ -4,6 +4,7 @@ import Data.List.Split
 import qualified Data.Map as M
 import qualified Data.Set as S
 import Data.List (singleton, intersperse, intercalate)
+import Control.Parallel.Strategies
 
 -- Parsing
 readConnection :: String -> (String, String)
@@ -23,19 +24,24 @@ findTrio m c = S.fromList $ concatMap candidates (m M.! c) where
 
 -- Part 2
 data Group = Group { inside :: S.Set String, neighs :: S.Set String } deriving (Show, Eq, Ord)
+newtype GroupSet = GroupSet { unGroupSet :: M.Map (S.Set String) (S.Set String) } deriving (Show, Eq, Ord, NFData)
 
-initGroups :: M.Map String (S.Set String) -> S.Set Group
-initGroups m = S.fromList $ map mkGroup $ M.keys m where
+initGroups :: M.Map String (S.Set String) -> GroupSet
+initGroups m = GroupSet $ M.fromList $ map mkGroup $ M.keys m where
     all = S.fromList $ M.keys m
-    mkGroup x = Group (S.singleton x) (S.delete x all)
+    mkGroup x = (S.singleton x, S.delete x all)
 
-expandGroup :: M.Map String (S.Set String) -> Group -> S.Set Group
-expandGroup m (Group inside neighs) = S.fromList $ map join $ filter accepted $ S.toList neighs where
+expandGroup :: M.Map String (S.Set String) -> Group -> GroupSet
+expandGroup m (Group inside neighs) = GroupSet $ M.fromList $ map join $ filter accepted $ S.toList neighs where
     accepted potentialNeigh = all (S.member potentialNeigh . (m M.!)) inside
-    join newMember = Group (S.insert newMember inside) $ S.filter (\n -> S.member n (m M.! newMember) && n /= newMember) neighs
+    join newMember = (S.insert newMember inside, S.filter (\n -> S.member n (m M.! newMember) && n /= newMember) neighs)
 
-expandSet :: M.Map String (S.Set String) -> S.Set Group -> S.Set Group
-expandSet m = S.unions . S.map (expandGroup m)
+mergeSets :: [GroupSet] -> GroupSet
+mergeSets = GroupSet . M.unions . map unGroupSet
+
+expandSet :: M.Map String (S.Set String) -> GroupSet -> GroupSet
+expandSet m = mergeSets . chunkParMap (expandGroup m . uncurry Group) . M.toList . unGroupSet where
+    chunkParMap f xs = map f xs `using` parListChunk 32 rdeepseq
 
 main :: IO ()
 main = do
@@ -45,7 +51,8 @@ main = do
     putStr "part 1: "; print $ S.size $ S.unions $ map (findTrio neighs) $ potentialChiefs neighs
 
     let singletons = initGroups neighs
-    let sss = takeWhile (not . S.null) $ iterate (expandSet neighs) singletons
-    mapM_ (\s -> print (S.size (inside $ S.findMin s), S.size s)) sss
-    let strs = S.toAscList $ inside $ S.findMin $ last sss
+    let groupsets = takeWhile (not . M.null . unGroupSet) $ iterate (expandSet neighs) singletons
+    let sss = map (S.fromList . M.keys . unGroupSet) groupsets
+    mapM_ (\s -> print (S.size (S.findMin s), S.size s)) $ sss
+    let strs = S.toAscList $ S.findMin $ last sss
     putStr "part 2: "; putStrLn $ intercalate "," strs
