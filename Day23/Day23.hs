@@ -1,10 +1,8 @@
-{-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
-{-# HLINT ignore "Use newtype instead of data" #-}
 import Data.List.Split
 import qualified Data.Map as M
 import qualified Data.Set as S
-import Data.List (singleton, intersperse, intercalate)
-import Control.Parallel.Strategies
+import Data.List (singleton, intercalate, partition, maximumBy, intersect)
+import Data.Function (on)
 
 -- Parsing
 readConnection :: String -> (String, String)
@@ -23,25 +21,22 @@ findTrio m c = S.fromList $ concatMap candidates (m M.! c) where
     candidates neighA = map (`S.insert` S.fromList [c, neighA]) $ filter (`S.member` self) (S.toList $ m M.! neighA)
 
 -- Part 2
-data Group = Group { inside :: S.Set String, neighs :: S.Set String } deriving (Show, Eq, Ord)
-newtype GroupSet = GroupSet { unGroupSet :: M.Map (S.Set String) (S.Set String) } deriving (Show, Eq, Ord, NFData)
 
-initGroups :: M.Map String (S.Set String) -> GroupSet
-initGroups m = GroupSet $ M.fromList $ map mkGroup $ M.keys m where
-    all = S.fromList $ M.keys m
-    mkGroup x = (S.singleton x, S.delete x all)
+-- from Wikipedia: Bron-Kerbosch algorithm
+-- algorithm BronKerbosch1(R, P, X) is
+--     if P and X are both empty then
+--         report R as a maximal clique
+--     for each vertex v in P do
+--         BronKerbosch1(R ⋃ {v}, P ⋂ N(v), X ⋂ N(v))
+--         P := P \ {v}
+--         X := X ⋃ {v}
 
-expandGroup :: M.Map String (S.Set String) -> Group -> GroupSet
-expandGroup m (Group inside neighs) = GroupSet $ M.fromList $ map join $ filter accepted $ S.toList neighs where
-    accepted potentialNeigh = all (S.member potentialNeigh . (m M.!)) inside
-    join newMember = (S.insert newMember inside, S.filter (\n -> S.member n (m M.! newMember) && n /= newMember) neighs)
-
-mergeSets :: [GroupSet] -> GroupSet
-mergeSets = GroupSet . M.unions . map unGroupSet
-
-expandSet :: M.Map String (S.Set String) -> GroupSet -> GroupSet
-expandSet m = mergeSets . chunkParMap (expandGroup m . uncurry Group) . M.toList . unGroupSet where
-    chunkParMap f xs = map f xs `using` parListChunk 32 rdeepseq
+bronKerbosch :: Ord a => M.Map a (S.Set a) -> [S.Set a]
+bronKerbosch m = go [] (M.keys m) [] where
+    intersectWith a = filter (\x -> S.member x (m M.! a))
+    go r [] [] = [S.fromList r]
+    go r [] x = []
+    go r (v:p) x = go (v:r) (intersectWith v p) (intersectWith v x) ++ go r p (v:x)
 
 main :: IO ()
 main = do
@@ -49,10 +44,5 @@ main = do
     let neighs = toMap input
 
     putStr "part 1: "; print $ S.size $ S.unions $ map (findTrio neighs) $ potentialChiefs neighs
-
-    let singletons = initGroups neighs
-    let groupsets = takeWhile (not . M.null . unGroupSet) $ iterate (expandSet neighs) singletons
-    let sss = map (S.fromList . M.keys . unGroupSet) groupsets
-    mapM_ (\s -> print (S.size (S.findMin s), S.size s)) $ sss
-    let strs = S.toAscList $ S.findMin $ last sss
-    putStr "part 2: "; putStrLn $ intercalate "," strs
+    -- mapM_ print $ bronKerbosch neighs
+    putStr "part 2: "; putStrLn $ intercalate "," $ S.toAscList $ maximumBy (compare `on` S.size) $ bronKerbosch neighs
