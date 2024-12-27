@@ -61,19 +61,21 @@ cheatable m len = A.assocs final `using` parListChunk 16 rdeepseq where
     (minx, miny) = minimum $ M.keys m
     (maxx, maxy) = maximum $ M.keys m
 
-    final = A.array ((minx, miny), (maxx, maxy)) [((x,y), memo A.! (len,x,y)) | x <- [minx..maxx], y <- [miny..maxy]]
-    memo :: A.Array (Int, Int, Int) (M.Map Coord Int)
+    final = A.array ((minx, miny), (maxx, maxy)) [((x,y), getFinal (x,y)) | x <- [minx..maxx], y <- [miny..maxy]]
+
+    getFinal :: Coord -> M.Map Coord Int
+    getFinal (x,y) = M.fromListWith (\a b -> b) $ concatMap (\d -> map (,d) $ S.toList $ memo A.! (d,x,y)) [1..len]
+
+    memo :: A.Array (Int, Int, Int) (S.Set Coord)
     memo = A.array ((0, minx, miny), (len, maxx, maxy)) [((n, x,y), go (x,y) n) | n <- [0..len], x <- [minx..maxx], y <- [miny..maxy]]
 
     go (x,y) n
-        | M.notMember (x,y) m = M.empty
-        | n <= 0 = if m M.! (x,y) /= Wall then M.singleton (x,y) 0 else M.empty
-        | otherwise = foldl1 merge $ (memo A.! (n-1, x, y)) : map go1 [(x-1, y), (x+1, y), (x, y-1), (x, y+1)]
+        | M.notMember (x,y) m = S.empty
+        | n <= 0 = if m M.! (x,y) /= Wall then S.singleton (x,y) else S.empty
+        | otherwise = S.unions $ map go1 [(x-1, y), (x+1, y), (x, y-1), (x, y+1)]
         where
             go1 (x', y') = memo `safeLookup` (n-1, x', y')
-            safeLookup a (n', x,y) = if x < minx || x > maxx || y < miny || y > maxy then M.empty else a A.! (n', x,y)
-            merge :: M.Map Coord Int -> M.Map Coord Int -> M.Map Coord Int
-            merge = MM.merge MM.preserveMissing (MM.mapMissing $ const (+1)) (MM.zipWithMatched $ const $ \l r -> min l (r+1))
+            safeLookup a (n', x,y) = if x < minx || x > maxx || y < miny || y > maxy then S.empty else a A.! (n', x,y)
 
 getCheatsN :: Int -> M.Map Coord Tile -> [(Int, Coord, Coord)]
 getCheatsN len m = do
@@ -82,7 +84,6 @@ getCheatsN len m = do
     if M.member from m && M.member to m && m M.! from /= Wall && m M.! to /= Wall
         then return (dist, from, to)
         else []
-
 
 solve :: M.Map Coord Tile -> Int -> Int
 solve m len = length $ filter ((>=100) . cheatSavings) cheats where
