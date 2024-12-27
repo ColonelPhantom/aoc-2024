@@ -1,5 +1,5 @@
 import Data.Bits (xor)
-import qualified Data.Map as M
+import qualified Data.HashMap.Strict as M
 import Data.Tuple (swap)
 import Control.Parallel (par)
 import Control.Parallel.Strategies
@@ -24,10 +24,10 @@ combos :: Int -> [([Int], Int)]
 combos secret = zip (slices 4 (changes ps)) (drop 4 ps) where
     ps = take 2000 $ map (`mod` 10) $ iterate secrets secret
 
-comboMap :: Int -> M.Map [Int] Int
+comboMap :: Int -> M.HashMap [Int] Int
 comboMap = M.fromListWith (\a b -> b) . combos
 
-unionsMergeWith :: (Ord k, NFData k, NFData a) => (a -> a -> a) -> [M.Map k a] -> M.Map k a
+unionsMergeWith :: (Ord k, NFData k, NFData a) => (a -> a -> a) -> [M.HashMap k a] -> M.HashMap k a
 unionsMergeWith f ms = case unionStep f ms `using` parList rdeepseq of 
     [] -> M.empty
     [m] -> m
@@ -37,7 +37,7 @@ unionsMergeWith f ms = case unionStep f ms `using` parList rdeepseq of
     unionStep f [m] = [m]
     unionStep f (m:n:ms) = M.unionWith f m n : unionStep f ms
 
-
+main :: IO ()
 main = do
     input <- map read . lines <$> getContents
     _ <- input `usingIO` rdeepseq
