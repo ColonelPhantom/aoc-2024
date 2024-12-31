@@ -34,6 +34,7 @@ neighs :: M.Map Coord Tile -> Neighs Coord
 neighs m (x,y) = filter isValid [(x-1, y), (x+1, y), (x, y-1), (x, y+1)] where
     isValid c = M.member c m && m M.! c /= Wall
 
+{-# INLINE manhattan #-}
 manhattan :: Coord -> Coord -> Int
 manhattan (x1,y1) (x2,y2) = abs (x1-x2) + abs (y1-y2)
 
@@ -43,7 +44,7 @@ pairs (x:xs) = (x,xs) : pairs xs
 
 cheatable :: [Coord] -> Int -> [(Int, Coord, Coord)]
 cheatable p len = maps where
-    maps = concatMap (\(x,xs) -> [(m,x,y) | y <- xs, let m = manhattan x y, m <= len]) (pairs p)
+    maps = concatMap (\(x,xs) -> [(m,x,y) | y <- drop 100 xs, let m = manhattan x y, m <= len]) (pairs p)
 
 solve :: [Coord]-> Int -> Int
 solve p len = length $ filter ((>=100) . cheatSavings) cheats where
