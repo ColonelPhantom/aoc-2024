@@ -1,13 +1,14 @@
-{-# LANGUAGE LambdaCase #-}
 import qualified Data.Map as M
 import Data.List.Split (splitOn)
 import Data.List (sortOn)
-import Data.Maybe (fromMaybe)
 
+-- Data types
 type Coord = (Int, Int)
 data Tile = Empty | Box | Wall | Robot deriving (Show, Eq)
+data Tile2 = Empty2 | BoxL | BoxR | Wall2 | Robot2 deriving (Show, Eq)
 data Move = U | D | L | R deriving (Show, Eq)
 
+-- Parsing
 readTile :: Char -> Tile
 readTile '#' = Wall
 readTile '.' = Empty
@@ -21,17 +22,6 @@ parseBoard xs = M.fromList elems where
     linep y = zipWith (`entry` y) [0..]
     entry x y char = ((x,y), readTile char)
 
-showBoard :: M.Map Coord Tile -> [String]
-showBoard m = map showLine lines where
-    line y = filter ((== y) . snd . fst) $ M.toAscList m
-    lines = takeWhile (not . null) $ map line [0..]
-    showLine = map (showTile . snd) . sortOn fst
-
-    showTile Wall = '#'
-    showTile Empty = '.'
-    showTile Box = 'O'
-    showTile Robot = '@'
-
 readMove :: Char -> Move
 readMove '<' = L
 readMove '>' = R
@@ -39,6 +29,7 @@ readMove '^' = U
 readMove 'v' = D
 readMove _ = error "invalid move"
 
+-- Part 1
 step :: Move -> Coord -> Coord
 step U (x,y) = (x,y-1)
 step D (x,y) = (x,y+1)
@@ -61,8 +52,7 @@ gps :: M.Map Coord Tile -> Int
 gps = sum . map (gps1 . fst) . filter ((== Box) . snd) . M.toList where
     gps1 (x,y) = x + 100 * y
 
-data Tile2 = Empty2 | BoxL | BoxR | Wall2 | Robot2 deriving (Show, Eq)
-
+-- Part 2
 convertMap :: M.Map Coord Tile -> M.Map Coord Tile2
 convertMap = M.fromList . concatMap (uncurry go) . M.toList where
     go :: Coord -> Tile -> [(Coord, Tile2)]
@@ -87,34 +77,19 @@ move2 dir c@(x,y) m =
 moveRobot2 :: Move -> (Coord, M.Map Coord Tile2) -> (Coord, M.Map Coord Tile2)
 moveRobot2 dir (c,m) = maybe (c,m) (step dir c,) (move2 dir c m)
 
-showBoard2 :: M.Map Coord Tile2 -> [String]
-showBoard2 m = map showLine lines where
-    line y = filter ((== y) . snd . fst) $ M.toAscList m
-    lines = takeWhile (not . null) $ map line [0..]
-    showLine = map (showTile2 . snd) . sortOn fst
-
-    showTile2 Wall2 = '#'
-    showTile2 Empty2 = '.'
-    showTile2 BoxL = '['
-    showTile2 BoxR = ']'
-    showTile2 Robot2 = '@'
-
 gps2 :: M.Map Coord Tile2 -> Int
 gps2 = sum . map (gps1 . fst) . filter ((== BoxL) . snd) . M.toList where
     gps1 (x,y) = x + 100 * y
-
 
 main :: IO ()
 main = do
     [board, moves] <- splitOn [""] . lines <$> getContents
     let b = parseBoard board
     let ms = map readMove $ concat moves
-    let robot = findRobot b
     putStr "part 1: "
     print $ gps $ snd $ foldl (flip moveRobot) (findRobot b, b) ms
 
     let b2 = convertMap b
-
     putStr "part 2: "
     print $ gps2 $ snd $ foldl (flip moveRobot2) (findRobot2 b2, b2) ms
 
