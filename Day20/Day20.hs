@@ -1,8 +1,8 @@
-import qualified Data.Map as M
 import Data.Maybe (catMaybes)
-import qualified Data.Set as S
-import Control.Parallel.Strategies
 import Data.List (unfoldr)
+import qualified Data.Map as M
+import qualified Data.Set as S
+import qualified Data.Array as A
 
 type Coord = (Int, Int)
 data Tile = Empty | Wall | Start | End deriving (Show, Eq)
@@ -44,13 +44,21 @@ pairs (x:xs) = (x,xs) : pairs xs
 
 cheatable :: [Coord] -> Int -> [(Int, Coord, Coord)]
 cheatable p len = maps where
-    maps = concatMap (\(x,xs) -> [(m,x,y) | y <- drop 100 xs, let m = manhattan x y, m <= len]) (pairs p)
+    maps = [ (m,(x1,y1),(x2,y2))
+           | ((x1, y1), startTime) <- zip p [0..]          -- the cheat starts at (x,y) at time startTime
+           , x2 <- [max 0 (x1 - len) .. min mx (x1 + len)] -- we find all reachable x2
+           , y2 <- [max 0 (y1 - len) .. min my (y1 + len)] -- and y2 values
+           , let m = manhattan (x1,y1) (x2,y2)             -- and calculate the actual (Manhattan) distance
+           , m <= len                                      -- and check if it's less than the desired length
+           , let endTime = a A.! (x2, y2)                  -- furthermore, we check the 'time' of the target square
+           , (endTime - startTime) - m >= 100              -- and check it the cheat saves enough time
+           ]
+    a = A.accumArray (\_ e -> e) (-1) ((0,0), (mx, my)) $ zip p [0..]
+    mx = maximum $ map fst p
+    my = maximum $ map snd p
 
-solve :: [Coord]-> Int -> Int
-solve p len = length $ filter ((>=100) . cheatSavings) cheats where
-    times = M.fromList $ zip p [0..]
-    cheats = cheatable p len
-    cheatSavings (dist, from, to) = (times M.! to - times M.! from) - dist
+solve :: [Coord] -> Int -> Int
+solve p len = length (cheatable p len)
 
 main = do
     board <- parseBoard . lines <$> getContents
