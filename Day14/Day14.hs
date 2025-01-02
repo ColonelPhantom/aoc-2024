@@ -2,6 +2,7 @@ import Data.List.Split (splitOn)
 import Data.Maybe (mapMaybe)
 import qualified Data.Set as S
 import Data.List (sort)
+import Control.Parallel.Strategies
 type Coord = (Int, Int)
 
 data Robot = Robot { pos :: Coord, vel :: Coord } deriving (Show)
@@ -44,8 +45,8 @@ hasDups xs = go S.empty xs where
     go s (x:xs) = if S.member x s then True else go (S.insert x s) xs
 
 findNoOverlap :: [Robot] -> Int
-findNoOverlap rs = go 0 where
-    go n = let rs' = map (calculateSteps' (101,103) n) rs in if hasDups rs' then go (n+1) else n
+findNoOverlap rs = length (takeWhile id xs) where
+    xs = map (\n -> hasDups $ map (calculateSteps' (101,103) n) rs) [0..] `using` parBuffer 1024 rseq
 
 main :: IO ()
 main = do
