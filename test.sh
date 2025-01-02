@@ -4,13 +4,19 @@ run_day_ghci () {
     cd ..
 }
 
+compile_day_ghc() {
+    cd Day$1
+    ghc -O2 -o Day$1.exe Day$1.hs -threaded > /dev/null
+    cd ..
+}
+
 run_day_ghc () {
     cd Day$1
-    ghc -O2 -o Day$1.exe Day$1.hs -threaded -prof -fprof-auto > /dev/null
-    /usr/bin/time -f "Day$1: %e seconds (%P CPU)" ./Day$1.exe +RTS -N -ls -p < day$1.input > /dev/null
+    /usr/bin/time -f "Day$1: %e seconds (%P CPU)" ./Day$1.exe +RTS -N < day$1.input > /dev/null
     cd ..
 }
 
 for i in {01..25}; do
+    compile_day_ghc $i;
     run_day_ghc $i;
 done
