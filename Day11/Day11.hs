@@ -1,8 +1,5 @@
 import qualified Data.Map as M
 
-blink :: [Int] -> [Int]
-blink = concatMap go1
-
 go1 :: Int -> [Int]
 go1 n
     | n == 0 = [1]
